@@ -11,29 +11,16 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-load("@score_docs_as_code//:docs.bzl", "docs")
-load("@score_tooling//:defs.bzl", "copyright_checker", "setup_starpls", "use_format_targets")
+load("@cargo-workspace//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_library")
 
-setup_starpls(
-    name = "starpls_server",
+rust_library(
+    name = "abi-types-codegen",
+    srcs = glob(["src/**/*.rs"]),
     visibility = ["//visibility:public"],
-)
-
-copyright_checker(
-    name = "copyright",
-    srcs = [
-        "src",
-        "//:BUILD",
-        "//:MODULE.bazel",
+    deps = all_crate_deps(
+        normal = True,
+    ) + [
+        "//src/parser:abi-types-parser",
     ],
-    config = "@score_tooling//cr_checker/resources:config",
-    template = "@score_tooling//cr_checker/resources:templates",
-    visibility = ["//visibility:public"],
-)
-
-# Add target for formatting checks
-use_format_targets()
-
-docs(
-    source_dir = "docs",
 )

@@ -1,114 +1,40 @@
+# ABI compatible datatypes
 
-# C++ & Rust Bazel Template Repository
+Tooling and common libraries for _ABI compatible datatypes_.
 
-This repository serves as a **template** for setting up **C++ and Rust projects** using **Bazel**.
-It provides a **standardized project structure**, ensuring best practices for:
+## Components
 
-- **Build configuration** with Bazel.
-- **Testing** (unit and integration tests).
-- **Documentation** setup.
-- **CI/CD workflows**.
-- **Development environment** configuration.
+- `Cargo.toml`: Rust/Cargo workspace which includes almost all crates in this repository.
+- `src/cli/`: Command-line tool to parse ABI type descriptions and generate Rust and C++ code.
+- `src/codegen/`: Code generator to turn ABI type descriptions into executable code.
+- `src/common/`: Rust crate which contains specialized ABI compatible types. Note that this crate
+  isn't part of the top-level workspace.
+- `src/parser/`: Parseer for ABI type description files.
 
----
+## Building
 
-## 📂 Project Structure
+The command line tool can be built with Bazel or with Cargo.
 
-| File/Folder                         | Description                                       |
-| ----------------------------------- | ------------------------------------------------- |
-| `README.md`                         | Short description & build instructions            |
-| `src/`                              | Source files for the module                       |
-| `tests/`                            | Unit tests (UT) and integration tests (IT)        |
-| `examples/`                         | Example files used for guidance                   |
-| `docs/`                             | Documentation (Doxygen for C++ / mdBook for Rust) |
-| `.github/workflows/`                | CI/CD pipelines                                   |
-| `.vscode/`                          | Recommended VS Code settings                      |
-| `.bazelrc`, `MODULE.bazel`, `BUILD` | Bazel configuration & settings                    |
-| `project_config.bzl`                | Project-specific metadata for Bazel macros        |
-| `LICENSE.md`                        | Licensing information                             |
-| `CONTRIBUTION.md`                   | Contribution guidelines                           |
+### Bazel
 
----
-
-## 🚀 Getting Started
-
-### 1️⃣ Clone the Repository
+If `bazel` isn't already available on your system, go to
+[Installing Bazel](https://bazel.build/install) and follow the instructions there.
+Then you can build the command line tool with:
 
 ```sh
-git clone https://github.com/eclipse-score/YOUR_PROJECT.git
-cd YOUR_PROJECT
+bazel build -c opt //src/cli:abi-types
 ```
 
-### 2️⃣ Build the Examples of module
+The built executable is placed at `bazel-bin/src/cli/abi-types`.
 
-> DISCLAIMER: Depending what module implements, it's possible that different
-> configuration flags needs to be set on command line.
+### Cargo
 
-To build all targets of the module the following command can be used:
+If `rustup` isn't already available on your system, go to
+[rustup.rs](https://rustup.rs/) and follow the instructions there.
+Then you can build the command line tool with:
 
 ```sh
-bazel build //src/...
+cargo build --release --package abi-types
 ```
 
-This command will instruct Bazel to build all targets that are under Bazel
-package `src/`. The ideal solution is to provide single target that builds
-artifacts, for example:
-
-```sh
-bazel build //src/<module_name>:release_artifacts
-```
-
-where `:release_artifacts` is filegroup target that collects all release
-artifacts of the module.
-
-> NOTE: This is just proposal, the final decision is on module maintainer how
-> the module code needs to be built.
-
-### 3️⃣ Run Tests
-
-```sh
-bazel test //tests/...
-```
-
----
-
-## 🛠 Tools & Linters
-
-The template integrates **tools and linters** from **centralized repositories** to ensure consistency across projects.
-
-- **C++:** `clang-tidy`, `cppcheck`, `Google Test`
-- **Rust:** `clippy`, `rustfmt`, `Rust Unit Tests`
-- **CI/CD:** GitHub Actions for automated builds and tests
-
----
-
-## 📖 Documentation
-
-- A **centralized docs structure** is planned.
-
----
-
-## ⚙️ `project_config.bzl`
-
-This file defines project-specific metadata used by Bazel macros, such as `dash_license_checker`.
-
-### 📌 Purpose
-
-It provides structured configuration that helps determine behavior such as:
-
-- Source language type (used to determine license check file format)
-- Safety level or other compliance info (e.g. ASIL level)
-
-### 📄 Example Content
-
-```python
-PROJECT_CONFIG = {
-    "asil_level": "QM",  # or "ASIL-A", "ASIL-B", etc.
-    "source_code": ["cpp", "rust"]  # Languages used in the module
-}
-```
-
-### 🔧 Use Case
-
-When used with macros like `dash_license_checker`, it allows dynamic selection of file types
- (e.g., `cargo`, `requirements`) based on the languages declared in `source_code`.
+The built executable is placed at `target/release/abi-types`.

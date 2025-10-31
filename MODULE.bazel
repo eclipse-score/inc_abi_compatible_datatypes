@@ -10,43 +10,31 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
+
+"""Tooling for ABI compatible datatypes"""
+
 module(
-    name = "cpp_rust_template_repository",
-    version = "1.0",
+    name = "abi_compatible_datatypes",
+    version = "1.0.0",
 )
-
-bazel_dep(name = "rules_python", version = "1.4.1")
-
-PYTHON_VERSION = "3.12"
-
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    is_default = True,
-    python_version = PYTHON_VERSION,
-)
-use_repo(python)
-
-# Add GoogleTest dependency
-bazel_dep(name = "googletest", version = "1.17.0")
 
 # Rust rules for Bazel
-bazel_dep(name = "rules_rust", version = "0.63.0")
+bazel_dep(name = "rules_rust", version = "0.67.0")
+crate = use_extension("@rules_rust//crate_universe:extensions.bzl", "crate")
 
-# C/C++ rules for Bazel
-bazel_dep(name = "rules_cc", version = "0.2.1")
-
-# LLVM Toolchains Rules - host configuration
-bazel_dep(name = "toolchains_llvm", version = "1.4.0")
-
-llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
-llvm.toolchain(
-    cxx_standard = {"": "c++17"},
-    llvm_version = "19.1.0",
+crate.from_cargo(
+    name = "cargo-workspace",
+    cargo_lockfile = "//:Cargo.lock",
+    manifests = ["//:Cargo.toml"],
 )
-use_repo(llvm, "llvm_toolchain")
-use_repo(llvm, "llvm_toolchain_llvm")
+use_repo(crate, "cargo-workspace")
 
-register_toolchains("@llvm_toolchain//:all")
+crate.from_cargo(
+    name = "abi-types-common",
+    cargo_lockfile = "//src/common:Cargo.lock",
+    manifests = ["//src/common:Cargo.toml"],
+)
+use_repo(crate, "abi-types-common")
 
 # tooling
 bazel_dep(name = "score_tooling", version = "1.0.1")

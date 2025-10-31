@@ -1,0 +1,27 @@
+[package]
+name = "abi-types-common"
+description = "Supporting data structures for ABI-compatible type definitions"
+version = "0.1.0"
+authors = ["Contributors to the Eclipse Foundation"]
+edition = "2024"
+license-file = "../../LICENSE"
+
+[features]
+iceoryx = [
+    "dep:iceoryx2-bb-elementary-traits",
+    "dep:com-api-concept",
+    "com-api-concept/iceoryx",
+]
+lola = ["dep:com-api-concept", "com-api-concept/lola"]
+
+[dependencies]
+
+[dependencies.iceoryx2-bb-elementary-traits]
+git = "https://github.com/eclipse-iceoryx/iceoryx2.git"
+rev = "cfa8b10fe1e723b22dc5abd97a155b6a992fe8e6"
+optional = true
+
+[dependencies.com-api-concept]
+git = "https://github.com/qorix-group/inc_mw_com.git"
+branch = "gateway"
+optional = true

@@ -1,0 +1,36 @@
+[workspace]
+members = [
+    "src/cli",
+    "src/codegen",
+    "src/parser",
+]
+exclude = [
+    "src/common",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Contributors to the Eclipse Foundation"]
+edition = "2024"
+license-file = "LICENSE"
+
+[workspace.dependencies]
+abi-types-codegen = { path = "src/codegen" }
+abi-types-parser = { path = "src/parser" }
+
+anyhow = "1"
+ariadne = "0.5"
+clap = "4"
+compact_str = "0.9"
+crossbeam-channel = "0.5"
+env_logger = "0.11"
+log = "0.4"
+logos = "0.15"
+notify = "8.2"
+rustc-hash = "2"
+serde = "1"
+serde_json5 = "0.2"
+
+[workspace.lints.clippy]
+get_first = "allow"

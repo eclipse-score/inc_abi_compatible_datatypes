@@ -1,0 +1,18 @@
+[package]
+name = "abi-types-parser"
+description = "Parser for ABI-compatible type definitions"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license-file.workspace = true
+
+[dependencies]
+anyhow.workspace = true
+ariadne.workspace = true
+compact_str.workspace = true
+log.workspace = true
+logos.workspace = true
+rustc-hash.workspace = true
+
+[lints]
+workspace = true
