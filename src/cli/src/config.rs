@@ -12,18 +12,21 @@
 // *******************************************************************************
 
 use abi_types_codegen as codegen;
+use clap::ArgAction;
+use log::debug;
 use std::path::PathBuf;
 
 pub fn load() -> Config {
     let config = <Config as clap::Parser>::parse();
     init_logging(config.verbosity);
+    debug!("config: {config:#?}");
     config
 }
 
 #[derive(Clone, Debug, clap::Parser)]
 #[command(version, about)]
 pub struct Config {
-    #[arg(global = true, short, long = "verbose", action = clap::ArgAction::Count)]
+    #[arg(global = true, short, long = "verbose", action = ArgAction::Count)]
     pub verbosity: u8,
 
     #[command(subcommand)]
@@ -40,7 +43,7 @@ pub enum Command {
 #[derive(Clone, Debug, clap::Args)]
 pub struct BuildConfig {
     /// Whether to format the generated code.
-    #[arg(short, long, default_value = "true")]
+    #[arg(long = "no-format", action = ArgAction::SetFalse, default_value = "true")]
     pub format: bool,
 
     /// The target language.

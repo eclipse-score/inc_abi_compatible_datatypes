@@ -39,7 +39,7 @@ pub fn generate(module: &ast::Module, _: &Config) -> String {
     let mut generator = Generator {
         output: String::with_capacity(16 * 1024),
     };
-    if let Err(error) = generator.gen_module(module) {
+    if let Err(error) = generator.gen_file(module) {
         panic!(
             "unexpected error during code generation: {}",
             format_error(&error),
@@ -66,8 +66,14 @@ struct Generator {
 }
 
 impl Generator {
+    fn gen_file(&mut self, top_module: &ast::Module) -> Result<()> {
+        self.gen_file_prolog()?;
+        self.gen_module(top_module)?;
+        self.gen_file_epilog()?;
+        Ok(())
+    }
+
     fn gen_module(&mut self, module: &ast::Module) -> Result<()> {
-        self.gen_module_prolog()?;
         for item in &module.items {
             match item {
                 ast::Item::Import(import) => self.gen_import(import)?,
@@ -75,14 +81,15 @@ impl Generator {
                 ast::Item::TypeDecl(type_decl) => self.gen_type_decl(type_decl)?,
             }
         }
-        self.gen_module_epilog()?;
         Ok(())
     }
 
-    fn gen_module_prolog(&mut self) -> Result<()> {
+    fn gen_file_prolog(&mut self) -> Result<()> {
         writeln!(
             self.output,
-            r#"
+            r#"\
+#pragma once
+
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
 // NOLINTBEGIN(cppcoreguidelines-pro-type-union-access)
@@ -100,7 +107,7 @@ impl Generator {
         Ok(())
     }
 
-    fn gen_module_epilog(&mut self) -> Result<()> {
+    fn gen_file_epilog(&mut self) -> Result<()> {
         writeln!(
             self.output,
             "
@@ -114,13 +121,23 @@ impl Generator {
         Ok(())
     }
 
-    fn gen_import(&mut self, _import: &ast::Import) -> Result<()> {
-        // TODO
+    fn gen_import(&mut self, import: &ast::Import) -> Result<()> {
+        writeln!(self.output, "using {};", import.path.repr())?;
         Ok(())
     }
 
-    fn gen_module_decl(&mut self, _module_decl: &ast::ModuleDecl) -> Result<()> {
-        // TODO
+    fn gen_module_decl(&mut self, module_decl: &ast::ModuleDecl) -> Result<()> {
+        let name = module_decl.name.repr();
+        if let Some(body) = &module_decl.body {
+            writeln!(self.output, "namespace {name} {{")?;
+            self.gen_module(body)?;
+            writeln!(self.output, "\n}}\n")?;
+        } else {
+            writeln!(
+                self.output,
+                "namespace {name} {{\n#include \"{name}.hpp\"\n}}\n",
+            )?;
+        }
         Ok(())
     }
 
