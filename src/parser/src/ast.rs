@@ -190,6 +190,16 @@ pub struct Path {
     pub elements: Vec<Identifier>,
 }
 
+impl Path {
+    pub fn as_simple_name(&self) -> Option<&str> {
+        if let [element] = &*self.elements {
+            Some(&element.name)
+        } else {
+            None
+        }
+    }
+}
+
 impl fmt::Debug for Path {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.is_global {

@@ -452,16 +452,17 @@ impl Representable for ast::Identifier {
         impl fmt::Display for Delegate<'_> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let s = match self.0.name.as_str() {
-                    "i8" => "int8_t",
-                    "i16" => "int16_t",
-                    "i32" => "int32_t",
-                    "i64" => "int64_t",
-                    "u8" => "uint8_t",
-                    "u16" => "uint16_t",
-                    "u32" => "uint32_t",
-                    "u64" => "uint64_t",
+                    "i8" => "std::int8_t",
+                    "i16" => "std::int16_t",
+                    "i32" => "std::int32_t",
+                    "i64" => "std::int64_t",
+                    "u8" => "std::uint8_t",
+                    "u16" => "std::uint16_t",
+                    "u32" => "std::uint32_t",
+                    "u64" => "std::uint64_t",
                     "f32" => "float",
                     "f64" => "double",
+                    "array" => "std::array",
                     other => other,
                 };
                 fmt::Display::fmt(s, f)

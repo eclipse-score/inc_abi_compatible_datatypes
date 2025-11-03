@@ -400,7 +400,15 @@ impl Representable for ast::TypeRef {
 
         impl fmt::Display for Delegate<'_> {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                write!(f, "{}{}", self.0.path.repr(), self.0.generics.repr())
+                let path = &self.0.path;
+                let generics = &self.0.generics;
+                if let Some("array") = path.as_simple_name() {
+                    let typ = generics.args[0].repr();
+                    let size = generics.args[1].repr();
+                    write!(f, "[{typ}; {size}]")
+                } else {
+                    write!(f, "{}{}", path.repr(), generics.repr())
+                }
             }
         }
 
