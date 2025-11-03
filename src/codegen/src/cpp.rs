@@ -212,16 +212,22 @@ impl Generator {
         type_decl: &ast::TypeDecl,
         content: &ast::EnumTypeDecl,
     ) -> Result<()> {
-        let name = type_decl.name.repr();
+        let representation = if content.variants.len() <= (1 << 8) {
+            "8"
+        } else if content.variants.len() <= (1 << 16) {
+            "16"
+        } else {
+            "32"
+        };
+        let type_name = type_decl.name.repr();
         let generics = type_decl.generics.repr();
 
         writeln!(
             self.output,
             "
-{generics} struct {name}{{
+{generics} union {type_name}{{
 public:
-    enum class Tag : uint8_t {{
-"
+    enum class Tag : std::uint{representation}_t {{"
         )?;
 
         for (index, variant) in content.variants.iter().enumerate() {
@@ -235,65 +241,45 @@ public:
 
         for variant in &content.variants {
             self.gen_variant_type(variant)?;
-            self.gen_variant_type_tag(&type_decl.name, variant)?;
         }
 
+        let variant_constructors = content
+            .variants
+            .iter()
+            .map(|variant| {
+                format!(
+                    "{type_name}({name} {snakecase_name}) : \
+                    m_{snakecase_name} {{ {snakecase_name} }} {{}}",
+                    name = variant.name.repr(),
+                    snakecase_name = variant.name.repr_snakecase(),
+                )
+            })
+            .into_list(None, "\n    ");
+
+        let variant_fields = content
+            .variants
+            .iter()
+            .map(|variant| {
+                format!(
+                    "{name} m_{snakecase_name};",
+                    name = variant.name.repr(),
+                    snakecase_name = variant.name.repr_snakecase(),
+                )
+            })
+            .into_list(None, "\n    ");
         writeln!(
             self.output,
             "
-    Tag tag() const noexcept {{
-        return m_tag;
-    }}
+    {variant_constructors}
 
-private:",
+    Tag tag() const noexcept {{ return m_tag; }}
+
+private:
+    struct {{ Tag m_tag; }};
+    {variant_fields}
+}};
+",
         )?;
-
-        if content.is_tag_only() {
-            writeln!(
-                self.output,
-                "
-    Tag m_tag;",
-            )?;
-        } else {
-            writeln!(
-                self.output,
-                "
-    union Variant {{
-        explicit Variant() noexcept {{}}",
-            )?;
-
-            for variant in content.variants.iter().filter(|variant| !variant.is_unit()) {
-                writeln!(
-                    self.output,
-                    "
-explicit Variant(const Variant{name}& {name_snakecase}) noexcept :
-    {name_snakecase}({name_snakecase}) {{}}",
-                    name = variant.name.repr(),
-                    name_snakecase = variant.name.repr_snakecase(),
-                )?;
-            }
-            writeln!(self.output)?;
-
-            for variant in content.variants.iter().filter(|variant| !variant.is_unit()) {
-                writeln!(
-                    self.output,
-                    "Variant{name} {name_snakecase};",
-                    name = variant.name.repr(),
-                    name_snakecase = variant.name.repr_snakecase(),
-                )?;
-            }
-
-            writeln!(
-                self.output,
-                "}};
-
-    Tag m_tag;
-    Variant m_value;"
-            )?;
-        }
-
-        writeln!(self.output, "}};",)?;
-
         Ok(())
     }
 
@@ -303,10 +289,12 @@ explicit Variant(const Variant{name}& {name_snakecase}) noexcept :
                 writeln!(
                     self.output,
                     "
-void set_to_{name_snakecase}() {{
-    m_tag = Tag::{name};
-}}",
-                    name_snakecase = variant.name.repr_snakecase(),
+struct {name} {{
+public:
+    {name}() : m_tag {{ Tag::{name} }} {{}}
+private:
+    Tag m_tag;
+}};",
                     name = variant.name.repr(),
                 )?;
             },
@@ -315,23 +303,45 @@ void set_to_{name_snakecase}() {{
                 writeln!(
                     self.output,
                     "
-struct Variant{name} {{
+struct {name} {{
+public:
+    {name}({type_ref} value) : m_tag {{ Tag::{name} }}, value {{ value }} {{}}
+private:
+    Tag m_tag;
+public:
     {type_ref} value;
-}};
-",
+}};",
                     name = variant.name.repr(),
                     type_ref = type_ref.repr(),
                 )?;
             },
 
             ast::EnumVariantKind::Struct { fields } => {
+                let field_params = fields
+                    .iter()
+                    .map(|field| {
+                        format!(
+                            "{type_ref} {name}",
+                            type_ref = field.type_ref.repr(),
+                            name = field.name.repr(),
+                        )
+                    })
+                    .into_list(None, ", ");
+                let field_initializers = fields
+                    .iter()
+                    .map(|field| format!("{name} {{ {name} }}", name = field.name.repr()))
+                    .into_list(None, ", ");
                 writeln!(
                     self.output,
                     "
-struct Variant{name} {{
+struct {name} {{
+public:
+    {name}({field_params}) : m_tag {{ Tag::{name} }}, {field_initializers} {{}}
+private:
+    Tag m_tag;
+public:
     {fields}
-}};
-",
+}};",
                     name = variant.name.repr(),
                     fields = fields.repr(),
                 )?;
@@ -339,29 +349,13 @@ struct Variant{name} {{
         }
         Ok(())
     }
-
-    fn gen_variant_type_tag(
-        &mut self,
-        type_name: &ast::Identifier,
-        variant: &ast::EnumVariant,
-    ) -> Result<()> {
-        writeln!(
-            self.output,
-            "
-struct {name}Tag {{
-    static constexpr {type_name}::Tag VALUE = {type_name}::Tag::{name};
-}};
-static constexpr {name}Tag {name} {{}};",
-            type_name = type_name.repr(),
-            name = variant.name.repr()
-        )?;
-        Ok(())
-    }
 }
 
 impl Representable for [ast::StructField] {
     fn repr(&self) -> impl fmt::Display {
-        self.iter().map(Representable::repr).into_list(None, "")
+        self.iter()
+            .map(Representable::repr)
+            .into_list(None, "\n    ")
     }
 }
 
@@ -374,7 +368,7 @@ impl Representable for ast::StructField {
                 let field = &self.0;
                 let name = field.name.repr();
                 let type_ref = field.type_ref.repr();
-                writeln!(f, "{type_ref} {name};")
+                write!(f, "{type_ref} {name};")
             }
         }
 

@@ -226,6 +226,13 @@ impl PlacementDefault for {name}{generics} {{
         type_decl: &ast::TypeDecl,
         content: &ast::EnumTypeDecl,
     ) -> Result<()> {
+        let representation = if content.variants.len() <= (1 << 8) {
+            "8"
+        } else if content.variants.len() <= (1 << 16) {
+            "16"
+        } else {
+            "32"
+        };
         let name = type_decl.name.repr();
         let generics = type_decl.generics.repr();
         let variants = content.variants.repr();
@@ -233,7 +240,7 @@ impl PlacementDefault for {name}{generics} {{
             self.output,
             "\
 #[derive(Clone, Debug)]
-#[repr(C)]
+#[repr(C, u{representation})]
 pub enum {name}{generics}{{{variants}}}",
         )?;
         Ok(())
