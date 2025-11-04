@@ -132,6 +132,16 @@ Define a custom description language tailored to our needs:
 
 ---
 
+## Goals
+
+(besides ABI compatibility)
+
+- Efficient: memory usage
+- Efficient: fast writing and reading
+- Ergonomic: convenient writing and reading
+
+---
+
 ## The Result
 
 ```rust
@@ -182,6 +192,11 @@ struct Example01 {
 }
 ```
 
+![center](struct-layout.drawio.svg)
+
+</div>
+<div class="column">
+
 Generated code:
 
 ```rust
@@ -195,16 +210,69 @@ pub struct Example01 {
 
 ```c++
 struct Example01 {
-    uint16_t field_1;
+    std::uint16_t field_1;
     float field_2;
-    uint8_t field_3[3];
+    std::array<std::uint8_t, 3> field_3;
 };
 ```
 
 </div>
-<div class="centered-column">
+</div>
 
-![center](struct-layout.drawio.svg)
+---
+
+## Memory Layout: Enums
+
+<div class="columns">
+<div class="column">
+
+Enum description:
+
+```rust
+enum Example02 {
+    VariantA,
+    VariantB(f32),
+    VariantC { x: u8, y: u32 },
+}
+```
+
+![center](enum-layout.drawio.svg)
+
+</div>
+<div class="column">
+
+Generated code:
+
+```rust
+#[repr(u8)]
+pub enum Example02 {
+    VariantA = 0,
+    VariantB(f32) = 1,
+    VariantC { pub x: u8, pub y: u32 } = 2,
+}
+```
+
+```c++
+union Example02 {
+public:
+  enum class Tag : std::uint8_t {
+    VariantA = 0,
+    VariantB = 1,
+    VariantC = 2,
+  };
+  // ...
+  struct VariantB {
+  private: Tag m_tag;
+  public:  float value;
+  };
+  // ...
+private:
+  struct { Tag m_tag; };
+  VariantA m_variant_a;
+  VariantB m_variant_b;
+  VariantC m_variant_c;
+};
+```
 
 </div>
 </div>
