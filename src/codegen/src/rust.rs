@@ -249,6 +249,66 @@ pub enum {name}{generics}{{
     {variants}
 }}",
         )?;
+
+        if self.config.rust.derive_iceoryx2_traits
+            && let Some(first_variant) = content.variants.first()
+        {
+            writeln!(
+                self.output,
+                "
+impl PlacementDefault for {name}{generics} {{
+    unsafe fn placement_default(ptr: *mut Self) {{
+        #[repr(C)]
+        struct FirstVariant {{
+            __tag__: u{representation},"
+            )?;
+
+            match &first_variant.kind {
+                ast::EnumVariantKind::Unit => {},
+                ast::EnumVariantKind::NewType { type_ref } => writeln!(
+                    self.output,
+                    "__value__: {type_ref},",
+                    type_ref = type_ref.repr()
+                )?,
+                ast::EnumVariantKind::Struct { fields } => {
+                    for field in fields {
+                        writeln!(
+                            self.output,
+                            "{name}: {type_ref},",
+                            name = field.name.repr(),
+                            type_ref = field.type_ref.repr()
+                        )?;
+                    }
+                },
+            }
+
+            writeln!(
+                self.output,
+                "}}
+        let ptr = ptr.cast::<FirstVariant>();
+        (&raw mut (*ptr).__tag__).write(0);"
+            )?;
+
+            match &first_variant.kind {
+                ast::EnumVariantKind::Unit => {},
+                ast::EnumVariantKind::NewType { .. } => writeln!(
+                    self.output,
+                    "PlacementDefault::placement_default(&raw mut (*ptr).__value__);",
+                )?,
+                ast::EnumVariantKind::Struct { fields } => {
+                    for field in fields {
+                        writeln!(
+                            self.output,
+                            "PlacementDefault::placement_default(&raw mut (*ptr).{name});",
+                            name = field.name.repr(),
+                        )?;
+                    }
+                },
+            }
+
+            writeln!(self.output, "}}\n}}")?;
+        }
+
         Ok(())
     }
 

@@ -11,7 +11,7 @@
 // SPDX-License-Identifier: Apache-2.0
 // *******************************************************************************
 
-use std::{cell::RefCell, fmt};
+use std::fmt;
 
 pub trait IteratorExt: Iterator {
     fn into_list<'a>(
@@ -25,7 +25,7 @@ pub trait IteratorExt: Iterator {
 
 impl<Iter> IteratorExt for Iter
 where
-    Iter: Iterator,
+    Iter: Iterator + Clone,
     Iter::Item: fmt::Display,
 {
     fn into_list<'a>(
@@ -37,7 +37,7 @@ where
         Iter: 'a,
     {
         ListDelegate {
-            iter: RefCell::new(Some(self)),
+            iter: self,
             wrapper,
             separator,
         }
@@ -45,18 +45,18 @@ where
 }
 
 struct ListDelegate<'a, Iter> {
-    iter: RefCell<Option<Iter>>,
+    iter: Iter,
     wrapper: Option<(&'a str, &'a str)>,
     separator: &'a str,
 }
 
 impl<'a, Iter> fmt::Display for ListDelegate<'a, Iter>
 where
-    Iter: Iterator,
+    Iter: Iterator + Clone,
     Iter::Item: fmt::Display,
 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut iter = self.iter.take().unwrap();
+        let mut iter = self.iter.clone();
         if let Some(first) = iter.next() {
             if let Some((opening, _)) = self.wrapper {
                 f.write_str(opening)?;
