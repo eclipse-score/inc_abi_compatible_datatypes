@@ -207,37 +207,30 @@ impl Generator {
         Ok(())
     }
 
+    /// Generate code for `enum` type descriptions.
+    ///
+    /// We use the `#[repr(u8)]` layout of Rust enums, which is specified in the Rust reference:
+    /// [Combining primitive representations of enums with fields and `#[repr(C)]`](https://doc.rust-lang.org/stable/reference/type-layout.html#primitive-representation-of-enums-with-fields)
     fn gen_enum_decl(
         &mut self,
         type_decl: &ast::TypeDecl,
         content: &ast::EnumTypeDecl,
     ) -> Result<()> {
-        let representation = if content.variants.len() <= (1 << 8) {
-            "8"
-        } else if content.variants.len() <= (1 << 16) {
-            "16"
-        } else {
-            "32"
-        };
         let type_name = type_decl.name.repr();
         let generics = type_decl.generics.repr();
+
+        if content.is_tag_only() {
+            self.gen_enum_tag(type_name, &content.variants)?;
+            return Ok(());
+        }
 
         writeln!(
             self.output,
             "
 {generics} union {type_name}{{
-public:
-    enum class Tag : std::uint{representation}_t {{"
+public:",
         )?;
-
-        for (index, variant) in content.variants.iter().enumerate() {
-            writeln!(
-                self.output,
-                "    {name} = {index},",
-                name = variant.name.repr(),
-            )?;
-        }
-        writeln!(self.output, "}};")?;
+        self.gen_enum_tag("Tag", &content.variants)?;
 
         for variant in &content.variants {
             self.gen_variant_type(variant)?;
@@ -281,6 +274,38 @@ private:
 ",
         )?;
         Ok(())
+    }
+
+    fn gen_enum_tag(
+        &mut self,
+        tag_name: impl fmt::Display,
+        variants: &[ast::EnumVariant],
+    ) -> Result<()> {
+        let representation = if variants.len() <= (1 << 8) {
+            "8"
+        } else if variants.len() <= (1 << 16) {
+            "16"
+        } else {
+            "32"
+        };
+        let entries = variants
+            .iter()
+            .map(|variant| {
+                format!(
+                    "{name} = {index},",
+                    name = variant.name.repr(),
+                    index = variant.index,
+                )
+            })
+            .into_list(None, "\n    ");
+        writeln!(
+            self.output,
+            "\
+enum class {tag_name} : std::uint{representation}_t {{
+    {entries}
+}};",
+        )?;
+        return Ok(());
     }
 
     fn gen_variant_type(&mut self, variant: &ast::EnumVariant) -> Result<()> {

@@ -221,6 +221,10 @@ impl PlacementDefault for {name}{generics} {{
         Ok(())
     }
 
+    /// Generate code for `enum` type descriptions.
+    ///
+    /// We use the `#[repr(u8)]` layout of Rust enums, which is specified in the Rust reference:
+    /// [Combining primitive representations of enums with fields and `#[repr(C)]`](https://doc.rust-lang.org/stable/reference/type-layout.html#primitive-representation-of-enums-with-fields)
     fn gen_enum_decl(
         &mut self,
         type_decl: &ast::TypeDecl,
@@ -240,8 +244,10 @@ impl PlacementDefault for {name}{generics} {{
             self.output,
             "\
 #[derive(Clone, Debug)]
-#[repr(C, u{representation})]
-pub enum {name}{generics}{{{variants}}}",
+#[repr(u{representation})]
+pub enum {name}{generics}{{
+    {variants}
+}}",
         )?;
         Ok(())
     }
@@ -319,7 +325,9 @@ impl Representable for ast::StructField {
 
 impl Representable for [ast::EnumVariant] {
     fn repr(&self) -> impl fmt::Display {
-        self.iter().map(Representable::repr).into_list(None, ", ")
+        self.iter()
+            .map(Representable::repr)
+            .into_list(None, ",\n    ")
     }
 }
 
@@ -331,15 +339,16 @@ impl Representable for ast::EnumVariant {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
                 let variant = &self.0;
                 let name = variant.name.repr();
+                let index = variant.index;
                 match &variant.kind {
-                    ast::EnumVariantKind::Unit => write!(f, "{name}"),
+                    ast::EnumVariantKind::Unit => write!(f, "{name} = {index}"),
                     ast::EnumVariantKind::NewType { type_ref } => {
                         let type_ref = type_ref.repr();
-                        write!(f, "{name}({type_ref})")
+                        write!(f, "{name}({type_ref}) = {index}")
                     },
                     ast::EnumVariantKind::Struct { fields } => {
                         let fields = fields.repr();
-                        write!(f, "{name}{{{fields}}}")
+                        write!(f, "{name}{{{fields}}} = {index}")
                     },
                 }
             }

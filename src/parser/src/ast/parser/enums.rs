@@ -21,8 +21,10 @@ impl TypeDeclKind {
     pub(super) fn parse_enum(state: &mut State) -> Self {
         match state.peek(0) {
             (Token::Braces(tokens), _) => {
-                let variants = state.descend(tokens, |state| state.parse_list("}"));
-                Self::Enum(EnumTypeDecl { variants })
+                let mut variants = state.descend(tokens, |state| state.parse_list("}"));
+                let mut decl = EnumTypeDecl { variants };
+                decl.update_variant_indices();
+                Self::Enum(decl)
             },
             (_, span) => {
                 state.error(span, "expected '{…}'");
@@ -46,8 +48,13 @@ impl TryParse for EnumVariant {
         let doc = DocComment::parse_opt_outer(state);
         let name = Identifier::try_parse(state)?;
         let kind = EnumVariantKind::parse(state);
-
-        Some(Self { doc, name, kind })
+        let index = u32::MAX;
+        Some(Self {
+            doc,
+            name,
+            kind,
+            index,
+        })
     }
 }
 

@@ -117,6 +117,12 @@ impl EnumTypeDecl {
     pub fn is_tag_only(&self) -> bool {
         self.variants.iter().all(EnumVariant::is_unit)
     }
+
+    fn update_variant_indices(&mut self) {
+        for (index, variant) in self.variants.iter_mut().enumerate() {
+            variant.index = index as u32;
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -130,6 +136,7 @@ pub struct StructField {
 pub struct EnumVariant {
     pub doc: Option<DocComment>,
     pub name: Identifier,
+    pub index: u32,
     pub kind: EnumVariantKind,
 }
 
