@@ -281,13 +281,13 @@ private:
 
 ## Features
 
-- Supports all primitive data types from the feature request
-- Supports all type constructors from the feature request
-  - Even variants/tagged unions
-- Declaration of external types
-  - For vector, queue, hash map, etc.
-- Generate C++ or Rust code
-- Extensible via attributes (`#[e2e_profile = ...]`)
+Supported types:
+
+- Primitive types: boolean, integers, floating-point
+- Sequences: fixed-length array
+- User-defined: structs, simple enums, tagged unions ("Rust" enums)
+- Containers: from iceoryx2
+- Specialized variants: option, result (custom implementation)
 
 ---
 
@@ -321,6 +321,18 @@ Safety qualification:
 ## Planned Feature: Extract Descriptions
 
 ![center](extract-description.drawio.svg)
+
+```json
+{
+    "name": "Example01", "kind": "struct", "size": 12,
+    "fields": [
+        { "name": "field_1", "type": "u8", "size": 1, "offset": 0 },
+        { "name": "field_2", "type": "u32", "size": 4, "offset": 4 },
+        { "name": "field_2", "type": "i16", "size": 2, "offset": 8 },
+        ...
+    ]
+}
+```
 
 ---
 
