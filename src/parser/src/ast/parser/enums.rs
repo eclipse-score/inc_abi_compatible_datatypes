@@ -16,7 +16,7 @@ use crate::ast::{tokenizer::Token, *};
 
 impl TypeDeclKind {
     /// ```text
-    /// '{' EnumVariant,* '}'
+    /// '{' EnumVariant,+ '}'
     /// ``````
     pub(super) fn parse_enum(state: &mut State) -> Self {
         match state.peek(0) {
@@ -37,8 +37,8 @@ impl TypeDeclKind {
 /// ```text
 /// EnumVariant →
 ///       OuterDoc? Identifier
-///     | OuterDoc? Identifier '(' TypeRef ')'
-///     | OuterDoc? Identifier '{' StructField,* '}'
+///     | OuterDoc? Identifier '(' TypeRef,+ ')'
+///     | OuterDoc? Identifier '{' StructField,+ '}'
 /// ``````
 impl TryParse for EnumVariant {
     const EXPECTED: &'static str =
@@ -64,15 +64,13 @@ impl EnumVariantKind {
             (Token::Comma | Token::End, _) => Self::Unit,
             (Token::Braces(tokens), _) => state.descend(tokens, |state| {
                 let fields = state.parse_list("}");
+                // TODO check that list is non-empty
                 Self::Struct { fields }
             }),
             (Token::Parens(tokens), _) => state.descend(tokens, |state| {
-                let type_ref = TypeRef::parse(state);
-                match state.peek(0) {
-                    (Token::End, _) => {},
-                    (_, span) => state.error(span, "expected ')'"),
-                }
-                Self::NewType { type_ref }
+                let elements = state.parse_list(")");
+                // TODO check that list is non-empty
+                Self::Tuple { elements }
             }),
             (_, span) => {
                 state.error(span, "expected '(…)', '{…}', ',', or '}'");

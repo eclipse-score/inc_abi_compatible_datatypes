@@ -87,7 +87,7 @@ pub struct TypeDecl {
 pub enum TypeDeclKind {
     /// A simple type declaration of the form `type NAME = … ;`.
     Simple(SimpleTypeDecl),
-    NewType(NewTypeDecl),
+    Tuple(TupleTypeDecl),
     Struct(StructTypeDecl),
     Enum(EnumTypeDecl),
     Error,
@@ -99,8 +99,8 @@ pub struct SimpleTypeDecl {
 }
 
 #[derive(Debug)]
-pub struct NewTypeDecl {
-    pub type_ref: TypeRef,
+pub struct TupleTypeDecl {
+    pub elements: Vec<TypeRef>,
 }
 
 #[derive(Debug)]
@@ -149,7 +149,7 @@ impl EnumVariant {
 #[derive(Debug)]
 pub enum EnumVariantKind {
     Unit,
-    NewType { type_ref: TypeRef },
+    Tuple { elements: Vec<TypeRef> },
     Struct { fields: Vec<StructField> },
 }
 

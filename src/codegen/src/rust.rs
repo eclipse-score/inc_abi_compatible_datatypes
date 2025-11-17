@@ -122,7 +122,7 @@ use iceoryx2::prelude::ZeroCopySend;",
         self.prepend_doc_comment(&type_decl.doc)?;
         match &type_decl.kind {
             ast::TypeDeclKind::Simple(decl) => self.gen_simple_type_decl(type_decl, decl)?,
-            ast::TypeDeclKind::NewType(decl) => self.gen_newtype_decl(type_decl, decl)?,
+            ast::TypeDeclKind::Tuple(decl) => self.gen_tuple_decl(type_decl, decl)?,
             ast::TypeDeclKind::Struct(decl) => self.gen_struct_decl(type_decl, decl)?,
             ast::TypeDeclKind::Enum(decl) => self.gen_enum_decl(type_decl, decl)?,
             ast::TypeDeclKind::Error => unreachable!(),
@@ -150,20 +150,20 @@ pub type {name}{generics} = {type_ref};"
         Ok(())
     }
 
-    fn gen_newtype_decl(
+    fn gen_tuple_decl(
         &mut self,
         type_decl: &ast::TypeDecl,
-        content: &ast::NewTypeDecl,
+        content: &ast::TupleTypeDecl,
     ) -> Result<()> {
-        let name = type_decl.name.repr();
-        let generics = type_decl.generics.repr();
-        let type_ref = content.type_ref.repr();
         writeln!(
             self.output,
             "\
 #[derive(Clone, Debug)]
 #[repr(C)]
-pub struct {name}{generics}(pub {type_ref});"
+pub struct {name}{generics}({element});",
+            name = type_decl.name.repr(),
+            generics = type_decl.generics.repr(),
+            element = content.elements.repr(),
         )?;
 
         if self.config.rust.derive_iceoryx2_traits {
@@ -171,13 +171,17 @@ pub struct {name}{generics}(pub {type_ref});"
                 self.output,
                 "
 impl PlacementDefault for {name}{generics} {{
-    unsafe fn placement_default(ptr: *mut Self) {{
-        PlacementDefault::placement_default(&raw mut (*ptr).0);
-    }}
-}}",
+    unsafe fn placement_default(ptr: *mut Self) {{",
                 name = type_decl.name.repr(),
                 generics = generics_placeholder(type_decl.generics.params.len()),
             )?;
+            for index in 0..content.elements.len() {
+                writeln!(
+                    self.output,
+                    "PlacementDefault::placement_default(&raw mut (*ptr).{index});",
+                )?;
+            }
+            writeln!(self.output, "}}\n}}")?;
         }
 
         Ok(())
@@ -257,45 +261,59 @@ pub enum {name}{generics}{{
                 self.output,
                 "
 impl PlacementDefault for {name}{generics} {{
-    unsafe fn placement_default(ptr: *mut Self) {{
-        #[repr(C)]
-        struct FirstVariant {{
-            __tag__: u{representation},"
+    unsafe fn placement_default(ptr: *mut Self) {{",
             )?;
 
             match &first_variant.kind {
-                ast::EnumVariantKind::Unit => {},
-                ast::EnumVariantKind::NewType { type_ref } => writeln!(
-                    self.output,
-                    "__value__: {type_ref},",
-                    type_ref = type_ref.repr()
-                )?,
-                ast::EnumVariantKind::Struct { fields } => {
-                    for field in fields {
+                ast::EnumVariantKind::Unit => {
+                    writeln!(
+                        self.output,
+                        "\
+#[repr(C)]
+struct FirstVariant(u{representation});
+
+let ptr = ptr.cast::<FirstVariant>();
+(&raw mut (*ptr).0).write(0);",
+                    )?;
+                },
+
+                ast::EnumVariantKind::Tuple { elements } => {
+                    let elements_repr = elements.repr();
+                    writeln!(
+                        self.output,
+                        "\
+#[repr(C)]
+struct FirstVariant(u{representation}, {elements_repr});
+
+let ptr = ptr.cast::<FirstVariant>();
+(&raw mut (*ptr).0).write(0);",
+                    )?;
+                    for index in 0..elements.len() {
                         writeln!(
                             self.output,
-                            "{name}: {type_ref},",
-                            name = field.name.repr(),
-                            type_ref = field.type_ref.repr()
+                            "PlacementDefault::placement_default(&raw mut (*ptr).{index});",
                         )?;
                     }
                 },
-            }
 
-            writeln!(
-                self.output,
-                "}}
-        let ptr = ptr.cast::<FirstVariant>();
-        (&raw mut (*ptr).__tag__).write(0);"
-            )?;
-
-            match &first_variant.kind {
-                ast::EnumVariantKind::Unit => {},
-                ast::EnumVariantKind::NewType { .. } => writeln!(
-                    self.output,
-                    "PlacementDefault::placement_default(&raw mut (*ptr).__value__);",
-                )?,
                 ast::EnumVariantKind::Struct { fields } => {
+                    let fields_decl = fields
+                        .iter()
+                        .map(|field| {
+                            let name = field.name.repr();
+                            let type_ref = field.type_ref.repr();
+                            format!("{name}: {type_ref}")
+                        })
+                        .into_list(None, ", ");
+                    writeln!(
+                        self.output,
+                        "\
+#[repr(C)]
+struct FirstVariant {{u{representation}, {fields_decl}}}
+
+let ptr = ptr.cast::<FirstVariant>();
+(&raw mut (*ptr).0).write(0);",
+                    )?;
                     for field in fields {
                         writeln!(
                             self.output,
@@ -306,7 +324,7 @@ impl PlacementDefault for {name}{generics} {{
                 },
             }
 
-            writeln!(self.output, "}}\n}}")?;
+            writeln!(self.output, "    }}\n}}")?;
         }
 
         Ok(())
@@ -360,6 +378,21 @@ impl E2ETypeConnector for {type_string} {{
     }
 }
 
+impl Representable for [ast::TypeRef] {
+    fn repr(&self) -> impl fmt::Display {
+        struct Delegate<'this>(&'this ast::TypeRef);
+
+        impl fmt::Display for Delegate<'_> {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                let type_ref = self.0.repr();
+                write!(f, "pub {type_ref}")
+            }
+        }
+
+        self.iter().map(Delegate).into_list(None, ", ")
+    }
+}
+
 impl Representable for [ast::StructField] {
     fn repr(&self) -> impl fmt::Display {
         self.iter().map(Representable::repr).into_list(None, ", ")
@@ -402,9 +435,9 @@ impl Representable for ast::EnumVariant {
                 let index = variant.index;
                 match &variant.kind {
                     ast::EnumVariantKind::Unit => write!(f, "{name} = {index}"),
-                    ast::EnumVariantKind::NewType { type_ref } => {
-                        let type_ref = type_ref.repr();
-                        write!(f, "{name}({type_ref}) = {index}")
+                    ast::EnumVariantKind::Tuple { elements } => {
+                        let elements = elements.repr();
+                        write!(f, "{name}({elements}) = {index}")
                     },
                     ast::EnumVariantKind::Struct { fields } => {
                         let fields = fields.repr();

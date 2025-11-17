@@ -87,8 +87,7 @@ impl Generator {
     fn gen_file_prolog(&mut self) -> Result<()> {
         writeln!(
             self.output,
-            r#"\
-#pragma once
+            r#"#pragma once
 
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers)
 // NOLINTBEGIN(cppcoreguidelines-pro-type-member-init,hicpp-member-init)
@@ -144,7 +143,7 @@ impl Generator {
     fn gen_type_decl(&mut self, type_decl: &ast::TypeDecl) -> Result<()> {
         match &type_decl.kind {
             ast::TypeDeclKind::Simple(decl) => self.gen_simple_type_decl(type_decl, decl)?,
-            ast::TypeDeclKind::NewType(decl) => self.gen_newtype_decl(type_decl, decl)?,
+            ast::TypeDeclKind::Tuple(decl) => self.gen_tuple_decl(type_decl, decl)?,
             ast::TypeDeclKind::Struct(decl) => self.gen_struct_decl(type_decl, decl)?,
             ast::TypeDeclKind::Enum(decl) => self.gen_enum_decl(type_decl, decl)?,
             ast::TypeDeclKind::Error => unreachable!(),
@@ -169,20 +168,31 @@ impl Generator {
         Ok(())
     }
 
-    fn gen_newtype_decl(
+    fn gen_tuple_decl(
         &mut self,
         type_decl: &ast::TypeDecl,
-        content: &ast::NewTypeDecl,
+        content: &ast::TupleTypeDecl,
     ) -> Result<()> {
         let name = type_decl.name.repr();
         let generics = type_decl.generics.repr();
-        let type_ref = content.type_ref.repr();
+        let elements = content
+            .elements
+            .iter()
+            .enumerate()
+            .map(|(index, element)| {
+                format!(
+                    "{type_ref} item_{index};",
+                    type_ref = element.repr(),
+                    index = index
+                )
+            })
+            .into_list(None, "\n    ");
         writeln!(
             self.output,
             "
-{generics} struct {name}{{
-    {type_ref} value;
-}};"
+        {generics} struct {name}{{
+            {elements}
+        }};"
         )?;
 
         Ok(())
@@ -324,20 +334,38 @@ private:
                 )?;
             },
 
-            ast::EnumVariantKind::NewType { type_ref } => {
+            ast::EnumVariantKind::Tuple { elements } => {
+                let element_params = elements
+                    .iter()
+                    .enumerate()
+                    .map(|(index, element)| {
+                        format!("{type_ref} item_{index}", type_ref = element.repr())
+                    })
+                    .into_list(None, ", ");
+                let element_initializers = elements
+                    .iter()
+                    .enumerate()
+                    .map(|(index, _)| format!("item_{index} {{ item_{index} }}"))
+                    .into_list(None, ", ");
+                let element_instantiations = elements
+                    .iter()
+                    .enumerate()
+                    .map(|(index, element)| {
+                        format!("{type_ref} item_{index};", type_ref = element.repr(),)
+                    })
+                    .into_list(None, "\n    ");
                 writeln!(
                     self.output,
                     "
 struct {name} {{
 public:
-    {name}({type_ref} value) : m_tag {{ Tag::{name} }}, value {{ value }} {{}}
+    {name}({element_params}) : m_tag {{ Tag::{name} }}, {element_initializers} {{}}
 private:
     Tag m_tag;
 public:
-    {type_ref} value;
+    {element_instantiations}
 }};",
                     name = variant.name.repr(),
-                    type_ref = type_ref.repr(),
                 )?;
             },
 

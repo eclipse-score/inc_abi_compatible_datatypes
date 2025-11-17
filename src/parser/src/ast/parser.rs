@@ -163,9 +163,9 @@ impl TypeDecl {
     /// ```text
     /// TypeDecl →
     ///       OuterDoc? Attributes* 'type' Identifier GenericParams? '=' TypeRef ';'
-    ///     | OuterDoc? Attributes* 'struct' Identifier GenericParams? '(' TupleField,* ')' ';'
-    ///     | OuterDoc? Attributes* 'struct' Identifier GenericParams? '{' StructField,* '}'
-    ///     | OuterDoc? Attributes* 'enum' Identifier GenericParams? '{' EnumVariant,* '}'
+    ///     | OuterDoc? Attributes* 'struct' Identifier GenericParams? '(' TupleField,+ ')' ';'
+    ///     | OuterDoc? Attributes* 'struct' Identifier GenericParams? '{' StructField,+ '}'
+    ///     | OuterDoc? Attributes* 'enum' Identifier GenericParams? '{' EnumVariant,+ '}'
     ///
     /// GenericParams →
     ///     '<' ( Identifier | 'const' Identifier ),* '>'
@@ -248,6 +248,22 @@ impl TypeRef {
         };
         let generics = GenericArgs { args };
         Self { path, generics }
+    }
+}
+
+impl TryParse for TypeRef {
+    const EXPECTED: &'static str = "a type reference (e.g., `A::B::C<X, Y>`)";
+
+    /// ```text
+    /// TypeRef →
+    ///     Path GenericArgs?
+    /// ``````
+    fn try_parse(state: &mut State) -> Option<Self> {
+        if matches!(state.peek(0).0, Token::Word(_) | Token::DoubleColon) {
+            Some(Self::parse(state))
+        } else {
+            None
+        }
     }
 }
 

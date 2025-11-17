@@ -16,35 +16,20 @@ use crate::ast::{tokenizer::Token, *};
 
 impl TypeDeclKind {
     /// ```text
-    ///   '(' TypeRef ')' ';'
-    /// | '{' StructField,* '}'
+    ///   '(' TypeRef,+ ')' ';'
+    /// | '{' StructField,+ '}'
     /// ``````
     pub(super) fn parse_struct(state: &mut State) -> Self {
         match state.peek(0) {
             (Token::Braces(tokens), _) => {
                 let fields = state.descend(tokens, |state| state.parse_list("}"));
+                // TODO check that list is non-empty
                 Self::Struct(StructTypeDecl { fields })
             },
             (Token::Parens(tokens), _) => {
-                let instance = state.descend(tokens, |state| {
-                    let type_ref = TypeRef::parse(state);
-                    match state.peek(0) {
-                        (Token::End, _) => {},
-                        (_, span) => state.error(span, "expected ')'"),
-                    }
-                    Self::NewType(NewTypeDecl { type_ref })
-                });
-
-                match state.peek(0) {
-                    (Token::Semicolon, _) => {
-                        state.consume();
-                    },
-                    (_, span) => {
-                        state.error(span, "expected ';'");
-                    },
-                }
-
-                instance
+                let elements = state.descend(tokens, |state| state.parse_list(")"));
+                // TODO check that list is non-empty
+                Self::Tuple(TupleTypeDecl { elements })
             },
             (_, span) => {
                 state.error(span, "expected '(…)' or '{…}'");
