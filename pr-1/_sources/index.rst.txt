@@ -1,6 +1,6 @@
 ..
    # *******************************************************************************
-   # Copyright (c) 2024 Contributors to the Eclipse Foundation
+   # Copyright (c) 2025 Contributors to the Eclipse Foundation
    #
    # See the NOTICE file(s) distributed with this work for additional
    # information regarding copyright ownership.
@@ -12,10 +12,15 @@
    # SPDX-License-Identifier: Apache-2.0
    # *******************************************************************************
 
-Module Template Documentation
-=============================
+ABI Compatible Data Types
+#########################
 
 This documentation describes the structure, usage and configuration of the Bazel-based C++/Rust module template.
+
+.. toctree::
+   :hidden:
+
+   syntax.rst
 
 .. contents:: Table of Contents
    :depth: 2
