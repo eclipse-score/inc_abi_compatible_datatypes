@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Type Description Syntax &#8212; Module Template Project  documentation</title>
+    <title>Memory Layout &#8212; Module Template Project  documentation</title>
   
   
   
@@ -62,7 +62,7 @@
     <script src="_static/sphinx-needs/libs/html/datatables.min.js?v=8a4aee21"></script>
     <script src="_static/sphinx-needs/libs/html/datatables_loader.js?v=a2cae175"></script>
     <script src="_static/sphinx-needs/libs/html/sphinx_needs_collapse.js?v=dca66431"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'syntax';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'memory_layout';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://eclipse-score.github.io/inc_abi_compatible_datatypes/versions.json';
@@ -72,8 +72,7 @@
         </script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Memory Layout" href="memory_layout.html" />
-    <link rel="prev" title="ABI Compatible Data Types" href="index.html" />
+    <link rel="prev" title="Type Description Syntax" href="syntax.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="0.1" />
@@ -152,15 +151,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="syntax.html">
     Type Description Syntax
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="memory_layout.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Memory Layout
   </a>
 </li>
@@ -274,15 +273,15 @@
 <nav>
   <ul class="bd-navbar-elements navbar-nav">
     
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="syntax.html">
     Type Description Syntax
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="memory_layout.html">
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#">
     Memory Layout
   </a>
 </li>
@@ -389,7 +388,7 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Type Description Syntax</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Memory Layout</span></li>
   </ul>
 </nav>
 </div>
@@ -406,87 +405,111 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="type-description-syntax">
-<h1>Type Description Syntax<a class="headerlink" href="#type-description-syntax" title="Link to this heading">#</a></h1>
-<section id="syntactical-rules">
-<h2>Syntactical Rules<a class="headerlink" href="#syntactical-rules" title="Link to this heading">#</a></h2>
-<p>The notation <code class="docutils literal notranslate"><span class="pre">▢,+</span></code> denotes a comma-separated list of <em>one or more</em> <code class="docutils literal notranslate"><span class="pre">▢</span></code> with an optional comma
-at the end.
-Examples:</p>
+  <section id="memory-layout">
+<h1>Memory Layout<a class="headerlink" href="#memory-layout" title="Link to this heading">#</a></h1>
+<p>The data structure definitions which are generated from type descriptions use memory layouts specified by the <em>C ABI</em> (Application Binary Interface).
+Strictly speaking, the C ABI is dependent on the platform – the combination of CPU architecture and operating system – but in practice, the memory layout of the relevant data structure constructs are the same across all supported platforms.</p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h2>
+<p>A type’s memory layout comprises at least its <em>size</em> and <em>alignment</em>.</p>
+<p>Types may only be instantiated at memory addresses which are natural multiples of its alignment. The alignment of a type must be a power of 2.</p>
+<p>The size of a type is the number of bytes which are occupied by an instance of the type in memory.
+This memory area is always contiguous.
+The size must be an natural multiple of its alignment.</p>
+<p>Type descriptions can optionally be parameterized by one or more generic parameters, each of which is either a type parameter or a value parameter.
+Such types are called <em>generic types</em>.
+A <em>concrete</em> type is either</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">▢</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,▢</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,▢,</span></code></p></li>
+<li><p>a type without any generic parameters, or</p></li>
+<li><p>a generic type with all its generic parameters bound to concrete types and values.</p></li>
 </ul>
-<p>The notation <code class="docutils literal notranslate"><span class="pre">▢,*</span></code> denotes a comma-separated list of <em>zero or more</em> <code class="docutils literal notranslate"><span class="pre">▢</span></code>,
-with an optional comma at the end if the list is non-empty.
-Examples:</p>
-<ul class="simple">
-<li><p>`` ``</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,▢</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">▢,▢,</span></code></p></li>
-</ul>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>SourceFile →
-   Module
-
-Module →
-   InnerDoc? Item*
-
-Item →
-   Import | ModuleDecl | TypeDecl
-
-Import →
-   OuterDoc? Attribute* &#39;use&#39; Path &#39;;&#39;
-
-Path →
-   &#39;::&#39;? ( Identifier &#39;::&#39; )* Identifier
-
-Attribute →
-   &#39;#&#39; &#39;[&#39; Identifier ( &#39;=&#39; Path )? &#39;]&#39;
-
-GenericParams →
-   &#39;&lt;&#39; ( Identifier | &#39;const&#39; Identifier ),* &#39;&gt;&#39;
-
-GenericArgs →
-   &#39;&lt;&#39; ( TypeRef | Integer ),* &#39;&gt;&#39;
-
-TypeRef →
-   Path GenericArgs?
-
-ModuleDecl →
-      OuterDoc? Attribute* &#39;mod&#39; Identifier &#39;;&#39;
-   | OuterDoc? Attribute* &#39;mod&#39; Identifier &#39;{&#39; Module &#39;}&#39;
-
-TypeDecl →
-      OuterDoc? Attribute* &#39;type&#39; Identifier GenericParams? &#39;=&#39; TypeRef &#39;;&#39;
-   | OuterDoc? Attribute* &#39;struct&#39; Identifier GenericParams? &#39;(&#39; TypeRef,+ &#39;)&#39;
-   | OuterDoc? Attribute* &#39;struct&#39; Identifier GenericParams? &#39;{&#39; StructField,+ &#39;}&#39;
-   | OuterDoc? Attribute* &#39;enum&#39; Identifier GenericParams? &#39;{&#39; EnumVariant,+ &#39;}&#39;
-
-StructField →
-   OuterDoc? Identifier &#39;:&#39; TypeRef
-
-EnumVariant →
-      OuterDoc? Identifier
-   | OuterDoc? Identifier &#39;(&#39; TypeRef,+ &#39;)&#39;
-   | OuterDoc? Identifier &#39;{&#39; StructField,+ &#39;}&#39;
-</pre></div>
+<p>Only concrete types are guaranteed to have a known memory layout, since the arguments which are bound to generic parameters can influence the size and alignment of a type.
+<strong>Note:</strong> The rest of this document is only concerned with concrete types.</p>
+</section>
+<section id="primitive-types">
+<h2>Primitive Types<a class="headerlink" href="#primitive-types" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Type</p></th>
+<th class="head"><p>Size</p></th>
+<th class="head"><p>Alignment</p></th>
+<th class="head"><p>Restrictions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>only the values <code class="docutils literal notranslate"><span class="pre">0x00</span></code> and <code class="docutils literal notranslate"><span class="pre">0x01</span></code> are allowed</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">u8</span></code> / <code class="docutils literal notranslate"><span class="pre">i8</span></code></p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">u16</span></code> / <code class="docutils literal notranslate"><span class="pre">i16</span></code></p></td>
+<td><p>2</p></td>
+<td><p>2</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">u32</span></code> / <code class="docutils literal notranslate"><span class="pre">i32</span></code></p></td>
+<td><p>4</p></td>
+<td><p>4</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">u64</span></code> / <code class="docutils literal notranslate"><span class="pre">i64</span></code></p></td>
+<td><p>8</p></td>
+<td><p>8</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">char</span></code></p></td>
+<td><p>4</p></td>
+<td><p>4</p></td>
+<td><p>only the value ranges <code class="docutils literal notranslate"><span class="pre">0x0</span></code> to <code class="docutils literal notranslate"><span class="pre">0xD7FF</span></code> and <code class="docutils literal notranslate"><span class="pre">0xE000</span></code> to <code class="docutils literal notranslate"><span class="pre">0x10FFFF</span></code> are allowed</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">f32</span></code></p></td>
+<td><p>4</p></td>
+<td><p>4</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f64</span></code></p></td>
+<td><p>8</p></td>
+<td><p>8</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </div>
 </section>
-<section id="lexical-rules">
-<h2>Lexical Rules<a class="headerlink" href="#lexical-rules" title="Link to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Identifier → [a-zA-Z_][a-zA-Z0-9_]*
-
-Integer → &#39;-&#39;? [0-9]+
-
-InnerDoc → &#39;//!&#39;…
-
-OuterDoc → &#39;///&#39;…
-</pre></div>
-</div>
+<section id="tuples">
+<h2>Tuples<a class="headerlink" href="#tuples" title="Link to this heading">#</a></h2>
+<p>A tuple is an ordered, non-empty list of numbered elements, each of which has a size and an alignment.
+The memory layout of a tuple <code class="docutils literal notranslate"><span class="pre">T</span></code> with <em>n &gt; 0</em> elements is defined as follows:</p>
+<ul class="simple">
+<li><p>The alignment of <code class="docutils literal notranslate"><span class="pre">T</span></code> is <code class="docutils literal notranslate"><span class="pre">align(T)</span> <span class="pre">:=</span> <span class="pre">max{i}(align(T[i]))</span></code>, i.e., the maximum over the alignment of each of its elements.</p></li>
+<li><p>The offset of element <em>0</em> of <code class="docutils literal notranslate"><span class="pre">T</span></code> (the first element in the list) is <code class="docutils literal notranslate"><span class="pre">offset(T[0])</span> <span class="pre">:=</span> <span class="pre">0</span></code>.
+The offset of element <em>i &gt; 0</em> of <code class="docutils literal notranslate"><span class="pre">T</span></code> is <code class="docutils literal notranslate"><span class="pre">offset(T[i])</span> <span class="pre">:=</span> <span class="pre">offset(T[i-1])</span> <span class="pre">+</span> <span class="pre">round_up_to_multiple(size(T[i-1]),</span> <span class="pre">align(T[i]))</span></code>, i.e., the smallest natural multiple of element <em>i</em>’s alignment so that element <em>i-1</em> and element <em>i</em> don’t overlap.</p></li>
+<li><p>The size of <code class="docutils literal notranslate"><span class="pre">T</span></code> is <code class="docutils literal notranslate"><span class="pre">size(T)</span> <span class="pre">:=</span> <span class="pre">round_up_to_multiple(offset(T[n-1])</span> <span class="pre">+</span> <span class="pre">size(T[n-1]),</span> <span class="pre">align(T))</span></code>, i.e., the smallest size that’s a natural multiple of the struct’s alignment that covers the range occupied by its elements.</p></li>
+</ul>
+</section>
+<section id="structs">
+<h2>Structs<a class="headerlink" href="#structs" title="Link to this heading">#</a></h2>
+<p>A struct is an ordered, non-empty list of named fields, each of which has a size and an alignment.
+The memory layout of a struct is defined analogously to that of a tuple with one element per struct field, which has the same type as that field.</p>
+</section>
+<section id="enums">
+<h2>Enums<a class="headerlink" href="#enums" title="Link to this heading">#</a></h2>
+<p>An enum is an ordered, non-empty list of variants, each of which can optionally carry a payload in the form of an anonymous struct or tuple.
+The memory layout of a enum <code class="docutils literal notranslate"><span class="pre">T</span></code> with <em>n &gt; 0</em> variants is defined as follows:</p>
+<ul class="simple">
+<li><p>The type of the tag is <code class="docutils literal notranslate"><span class="pre">u8</span></code> for enums with 1…256 variants, <code class="docutils literal notranslate"><span class="pre">u16</span></code> for enums with 256…65536 variants, and <code class="docutils literal notranslate"><span class="pre">u32</span></code> otherwise.</p></li>
+<li><p>The tag is always at offset <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p>The memory layout of a payload-less variant <code class="docutils literal notranslate"><span class="pre">V</span></code> is equivalent to the tag of the enum.</p></li>
+<li><p>The memory layout of a tuple-payload variant <code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">(</span> <span class="pre">Type_0,</span> <span class="pre">...,</span> <span class="pre">Type_m-1</span> <span class="pre">)</span></code> is equivalent to a tuple <code class="docutils literal notranslate"><span class="pre">T_V</span> <span class="pre">(</span> <span class="pre">Tag,</span> <span class="pre">Type_0,</span> <span class="pre">...,</span> <span class="pre">Type_m-1</span> <span class="pre">)</span></code>, i.e., the tag of the enum, followed by the list of the elements of the variant’s payload.</p></li>
+<li><p>The memory layout of a struct-payload variant <code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">{</span> <span class="pre">field_0:</span> <span class="pre">Type_0,</span> <span class="pre">...,</span> <span class="pre">field_m-1:</span> <span class="pre">Type_m-1</span> <span class="pre">}</span></code> is equivalent to a struct <code class="docutils literal notranslate"><span class="pre">T_V</span> <span class="pre">{</span> <span class="pre">tag:</span> <span class="pre">Tag,</span> <span class="pre">field_0:</span> <span class="pre">Type_0,</span> <span class="pre">...,</span> <span class="pre">field_m-1:</span> <span class="pre">Type_m-1</span> <span class="pre">}</span></code>, i.e., the tag of the enum, followed by the list of the fields of the variant’s payload.</p></li>
+<li><p>The alignment of <code class="docutils literal notranslate"><span class="pre">T</span></code> is <code class="docutils literal notranslate"><span class="pre">align(T)</span> <span class="pre">:=</span> <span class="pre">max{V}(align(T_V))</span></code>, i.e., the maximum over the alignments of the equivalent types for each of its variants.</p></li>
+<li><p>The size of <code class="docutils literal notranslate"><span class="pre">T</span></code> is <code class="docutils literal notranslate"><span class="pre">size(T)</span> <span class="pre">:=</span> <span class="pre">round_up_to_multiple(max{V}(size(T_V)),</span> <span class="pre">align(T))</span></code>, i.e., the maximum over the sizes of the equivalent types for each of its variants, rounded up to the smallest natural multiple of the alignment of <code class="docutils literal notranslate"><span class="pre">T</span></code>.</p></li>
+</ul>
 </section>
 </section>
 
@@ -501,22 +524,13 @@ OuterDoc → &#39;///&#39;…
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="index.html"
+       href="syntax.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">ABI Compatible Data Types</p>
+        <p class="prev-next-title">Type Description Syntax</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="memory_layout.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Memory Layout</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -537,8 +551,11 @@ OuterDoc → &#39;///&#39;…
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#syntactical-rules">Syntactical Rules</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#lexical-rules">Lexical Rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#primitive-types">Primitive Types</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tuples">Tuples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#structs">Structs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enums">Enums</a></li>
 </ul>
   </nav></div>
 
@@ -546,7 +563,7 @@ OuterDoc → &#39;///&#39;…
 
   
   <div class="tocsection editthispage">
-    <a href="https://github.com/eclipse-score/inc_abi_compatible_datatypes/edit/main/docs/syntax.rst">
+    <a href="https://github.com/eclipse-score/inc_abi_compatible_datatypes/edit/main/docs/memory_layout.rst">
       <i class="fa-solid fa-pencil"></i>
       
       
@@ -562,7 +579,7 @@ OuterDoc → &#39;///&#39;…
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/syntax.rst.txt"
+      <li><a href="_sources/memory_layout.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
