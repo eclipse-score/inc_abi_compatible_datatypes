@@ -21,6 +21,7 @@ This documentation describes the structure, usage and configuration of the Bazel
    :hidden:
 
    syntax.rst
+   memory_layout.rst
 
 .. contents:: Table of Contents
    :depth: 2
