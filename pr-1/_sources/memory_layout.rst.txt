@@ -105,7 +105,7 @@ Enums
 An enum is an ordered, non-empty list of variants, each of which can optionally carry a payload in the form of an anonymous struct or tuple.
 The memory layout of a enum ``T`` with *n > 0* variants is defined as follows:
 
-* The type of the tag is ``u8`` for enums with 1…256 variants, ``u16`` for enums with 256…65536 variants, and ``u32`` otherwise.
+* The type of the tag is ``u8`` for enums with 1…256 variants, ``u16`` for enums with 257…65536 variants, and ``u32`` otherwise.
 * The tag is always at offset ``0``.
 * The memory layout of a payload-less variant ``V`` is equivalent to the tag of the enum.
 * The memory layout of a tuple-payload variant ``V ( Type_0, ..., Type_m-1 )`` is equivalent to a tuple ``T_V ( Tag, Type_0, ..., Type_m-1 )``, i.e., the tag of the enum, followed by the list of the elements of the variant's payload.
