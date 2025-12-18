@@ -11,10 +11,10 @@
 # SPDX-License-Identifier: Apache-2.0
 # *******************************************************************************
 
-"""Tooling for ABI compatible datatypes"""
+"""Tooling for ABI compatible data types"""
 
 module(
-    name = "abi_compatible_datatypes",
+    name = "abi_compatible_data_types",
     version = "1.0.0",
 )
 
@@ -39,13 +39,6 @@ crate.from_cargo(
     manifests = ["//:Cargo.toml"],
 )
 use_repo(crate, "cargo-workspace")
-
-crate.from_cargo(
-    name = "abi-types-common",
-    cargo_lockfile = "//src/common:Cargo.lock",
-    manifests = ["//src/common:Cargo.toml"],
-)
-use_repo(crate, "abi-types-common")
 
 # tooling
 bazel_dep(name = "score_tooling", version = "1.0.1")

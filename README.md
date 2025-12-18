@@ -1,13 +1,12 @@
-# ABI compatible datatypes
+# ABI Compatible Data Types
 
-Tooling and common libraries for _ABI compatible datatypes_.
+Tooling and common libraries for _ABI compatible data types_.
 
 ## Components
 
 - `Cargo.toml`: Rust/Cargo workspace which includes almost all crates in this repository.
 - `src/cli/`: Command-line tool to parse ABI type descriptions and generate Rust and C++ code.
 - `src/codegen/`: Code generator to turn ABI type descriptions into executable code.
-- `src/common/`: Rust crate which contains specialized ABI compatible types. Note that this crate
   isn't part of the top-level workspace.
 - `src/parser/`: Parseer for ABI type description files.
 

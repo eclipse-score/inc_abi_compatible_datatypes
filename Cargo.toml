@@ -4,9 +4,6 @@ members = [
     "src/codegen",
     "src/parser",
 ]
-exclude = [
-    "src/common",
-]
 resolver = "2"
 
 [workspace.package]
