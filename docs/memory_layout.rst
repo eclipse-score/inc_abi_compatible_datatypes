@@ -1,0 +1,114 @@
+..
+   # *******************************************************************************
+   # Copyright (c) 2025 Contributors to the Eclipse Foundation
+   #
+   # See the NOTICE file(s) distributed with this work for additional
+   # information regarding copyright ownership.
+   #
+   # This program and the accompanying materials are made available under the
+   # terms of the Apache License Version 2.0 which is available at
+   # https://www.apache.org/licenses/LICENSE-2.0
+   #
+   # SPDX-License-Identifier: Apache-2.0
+   # *******************************************************************************
+
+Memory Layout
+#############
+
+The data structure definitions which are generated from type descriptions use memory layouts specified by the *C ABI* (Application Binary Interface).
+Strictly speaking, the C ABI is dependent on the platform – the combination of CPU architecture and operating system – but in practice, the memory layout of the relevant data structure constructs are the same across all supported platforms.
+
+Overview
+========
+
+A type's memory layout comprises at least its *size* and *alignment*.
+
+Types may only be instantiated at memory addresses which are natural multiples of its alignment. The alignment of a type must be a power of 2.
+
+The size of a type is the number of bytes which are occupied by an instance of the type in memory.
+This memory area is always contiguous.
+The size must be an natural multiple of its alignment.
+
+Type descriptions can optionally be parameterized by one or more generic parameters, each of which is either a type parameter or a value parameter.
+Such types are called *generic types*.
+A *concrete* type is either
+
+* a type without any generic parameters, or
+* a generic type with all its generic parameters bound to concrete types and values.
+
+Only concrete types are guaranteed to have a known memory layout, since the arguments which are bound to generic parameters can influence the size and alignment of a type.
+**Note:** The rest of this document is only concerned with concrete types.
+
+Primitive Types
+===============
+
+.. list-table::
+   :header-rows: 1
+
+   * - Type
+     - Size
+     - Alignment
+     - Restrictions
+   * - ``bool``
+     - 1
+     - 1
+     - only the values ``0x00`` and ``0x01`` are allowed
+   * - ``u8`` / ``i8``
+     - 1
+     - 1
+     -
+   * - ``u16`` / ``i16``
+     - 2
+     - 2
+     -
+   * - ``u32`` / ``i32``
+     - 4
+     - 4
+     -
+   * - ``u64`` / ``i64``
+     - 8
+     - 8
+     -
+   * - ``char``
+     - 4
+     - 4
+     - only the value ranges ``0x0`` to ``0xD7FF`` and ``0xE000`` to ``0x10FFFF`` are allowed
+   * - ``f32``
+     - 4
+     - 4
+     -
+   * - ``f64``
+     - 8
+     - 8
+     -
+
+Tuples
+======
+
+A tuple is an ordered, non-empty list of numbered elements, each of which has a size and an alignment.
+The memory layout of a tuple ``T`` with *n > 0* elements is defined as follows:
+
+* The alignment of ``T`` is ``align(T) := max{i}(align(T[i]))``, i.e., the maximum over the alignment of each of its elements.
+* The offset of element *0* of ``T`` (the first element in the list) is ``offset(T[0]) := 0``.
+  The offset of element *i > 0* of ``T`` is ``offset(T[i]) := offset(T[i-1]) + round_up_to_multiple(size(T[i-1]), align(T[i]))``, i.e., the smallest natural multiple of element *i*'s alignment so that element *i-1* and element *i* don't overlap.
+* The size of ``T`` is ``size(T) := round_up_to_multiple(offset(T[n-1]) + size(T[n-1]), align(T))``, i.e., the smallest size that's a natural multiple of the struct's alignment that covers the range occupied by its elements.
+
+Structs
+=======
+
+A struct is an ordered, non-empty list of named fields, each of which has a size and an alignment.
+The memory layout of a struct is defined analogously to that of a tuple with one element per struct field, which has the same type as that field.
+
+Enums
+=====
+
+An enum is an ordered, non-empty list of variants, each of which can optionally carry a payload in the form of an anonymous struct or tuple.
+The memory layout of a enum ``T`` with *n > 0* variants is defined as follows:
+
+* The type of the tag is ``u8`` for enums with 1…256 variants, ``u16`` for enums with 257…65536 variants, and ``u32`` otherwise.
+* The tag is always at offset ``0``.
+* The memory layout of a payload-less variant ``V`` is equivalent to the tag of the enum.
+* The memory layout of a tuple-payload variant ``V ( Type_0, ..., Type_m-1 )`` is equivalent to a tuple ``T_V ( Tag, Type_0, ..., Type_m-1 )``, i.e., the tag of the enum, followed by the list of the elements of the variant's payload.
+* The memory layout of a struct-payload variant ``V { field_0: Type_0, ..., field_m-1: Type_m-1 }`` is equivalent to a struct ``T_V { tag: Tag, field_0: Type_0, ..., field_m-1: Type_m-1 }``, i.e., the tag of the enum, followed by the list of the fields of the variant's payload.
+* The alignment of ``T`` is ``align(T) := max{V}(align(T_V))``, i.e., the maximum over the alignments of the equivalent types for each of its variants.
+* The size of ``T`` is ``size(T) := round_up_to_multiple(max{V}(size(T_V)), align(T))``, i.e., the maximum over the sizes of the equivalent types for each of its variants, rounded up to the smallest natural multiple of the alignment of ``T``.

@@ -24,7 +24,6 @@ copyright_checker(
     name = "copyright",
     srcs = [
         "src",
-        "tests",
         "//:BUILD",
         "//:MODULE.bazel",
     ],
@@ -34,9 +33,18 @@ copyright_checker(
 )
 
 dash_license_checker(
-    src = "//examples:cargo_lock",
+    src = "//:cargo_lock",
     file_type = "",  # let it auto-detect based on project_config
     project_config = PROJECT_CONFIG,
+    visibility = ["//visibility:public"],
+)
+
+# Needed for Dash tool to check python dependency licenses.
+filegroup(
+    name = "cargo_lock",
+    srcs = [
+        "Cargo.lock",
+    ],
     visibility = ["//visibility:public"],
 )
 

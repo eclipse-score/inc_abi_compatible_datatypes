@@ -1,0 +1,24 @@
+[package]
+name = "abi-types"
+description = "Generates Rust and C++ code from ABI-compatible type definitions"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license-file.workspace = true
+
+[dependencies]
+abi-types-codegen.workspace = true
+abi-types-parser.workspace = true
+anyhow.workspace = true
+ariadne.workspace = true
+clap = { workspace = true, features = ["derive"] }
+compact_str.workspace = true
+crossbeam-channel.workspace = true
+env_logger.workspace = true
+log.workspace = true
+logos.workspace = true
+notify.workspace = true
+rustc-hash.workspace = true
+
+[lints]
+workspace = true

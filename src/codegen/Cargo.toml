@@ -1,0 +1,21 @@
+[package]
+name = "abi-types-codegen"
+description = "Code generator for ABI-compatible type definitions"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license-file.workspace = true
+
+[features]
+json5_config = ["dep:serde", "dep:serde_json5"]
+
+[dependencies]
+anyhow.workspace = true
+log.workspace = true
+abi-types-parser.workspace = true
+
+serde = { optional = true, workspace = true, features = ["derive"] }
+serde_json5 = { optional = true, workspace = true }
+
+[lints]
+workspace = true
